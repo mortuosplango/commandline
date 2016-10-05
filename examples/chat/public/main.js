@@ -10,6 +10,7 @@ $(function() {
   // Initialize variables
   var $window = $(window);
   var $usernameInput = $('.usernameInput'); // Input for username
+  var $passwordInput = $('.passwordInput'); // Input for username
   var $messages = $('.messages'); // Messages area
   var $inputMessage = $('.inputMessage'); // Input message input box
   var $scoreMessages = $('.scoreMessages'); // Messages area
@@ -23,7 +24,8 @@ $(function() {
   var connected = false;
   var typing = false;
   var lastTypingTime;
-  var $currentInput = $usernameInput.focus();
+  /*var $currentInput = $usernameInput.focus();*/
+  var $currentInput = '';
   var $nextScoreMsg = 'ALL';
 
   var socket = io();
@@ -41,13 +43,14 @@ $(function() {
   // Sets the client's username
   function setUsername () {
     username = cleanInput($usernameInput.val().trim());
+    password = cleanInput($passwordInput.val().trim());
 
     // If the username is valid
-    if (username) {
+    if (username && password === 'XXXX') {
       $loginPage.fadeOut();
       $chatPage.show();
       $loginPage.off('click');
-      //$currentInput = $inputMessage.focus();
+      $currentInput = $inputMessage.focus();
 
       // Tell the server your username
       socket.emit('add user', username);

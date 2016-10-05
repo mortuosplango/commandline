@@ -72,7 +72,21 @@ ul {
   width: 400px;
 }
 
+.login.page .form .passwordInput {
+  background-color: transparent;
+  border: none;
+  border-bottom: 2px solid #fff;
+  outline: none;
+  padding-bottom: 15px;
+  text-align: center;
+  width: 400px;
+}
+
 .login.page .title {
+  font-size: 200%;
+}
+
+.login.page .passTitle {
   font-size: 200%;
 }
 
@@ -81,7 +95,17 @@ ul {
   letter-spacing: 3px;
 }
 
+.login.page .passwordInput {
+  font-size: 200%;
+  letter-spacing: 3px;
+}
+
 .login.page .title, .login.page .usernameInput {
+  color: #fff;
+  font-weight: 100;
+}
+
+.login.page .passTitle, .login.page .passwordInput {
   color: #fff;
   font-weight: 100;
 }
