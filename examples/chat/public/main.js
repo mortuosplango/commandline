@@ -12,6 +12,8 @@ $(function() {
   var $usernameInput = $('.usernameInput'); // Input for username
   var $messages = $('.messages'); // Messages area
   var $inputMessage = $('.inputMessage'); // Input message input box
+  var $scoreMessages = $('.scoreMessages'); // Messages area
+  var $scoreInputMessage = $('.scoreInputMessage'); // Input message input box
 
   var $loginPage = $('.login.page'); // The login page
   var $chatPage = $('.chat.page'); // The chatroom page
@@ -22,13 +24,14 @@ $(function() {
   var typing = false;
   var lastTypingTime;
   var $currentInput = $usernameInput.focus();
+  var $nextScoreMsg = 'ALL';
 
   var socket = io();
 
   function addParticipantsMessage (data) {
     var message = '';
     if (data.numUsers === 1) {
-      message += "there's 1 participant";
+      message += "there is 1 participant";
     } else {
       message += "there are " + data.numUsers + " participants";
     }
@@ -44,7 +47,7 @@ $(function() {
       $loginPage.fadeOut();
       $chatPage.show();
       $loginPage.off('click');
-      $currentInput = $inputMessage.focus();
+      //$currentInput = $inputMessage.focus();
 
       // Tell the server your username
       socket.emit('add user', username);
@@ -64,7 +67,28 @@ $(function() {
         message: message
       });
       // tell server to execute 'new message' and send along one parameter
-      socket.emit('new message', message);
+      socket.emit('new C message', message);
+    }
+  }
+
+  // Sends a SCORE message
+  function sendScoreMessage () {
+    var message = $scoreInputMessage.val();
+    // Prevent markup from being injected into the message
+    message = cleanInput(message);
+    // if there is a non-empty message and a socket connection
+    if (message && connected) {
+      $scoreInputMessage.val('');
+      addScoreMessage({
+        username: $nextScoreMsg,
+        message: message
+      });
+      // tell server to execute 'new message' and send along one parameter
+      //socket.emit('new S message', message);
+      socket.json.emit('new S message', {
+          username: $nextScoreMsg,
+          message: message
+        })
     }
   }
 
@@ -76,6 +100,7 @@ $(function() {
 
   // Adds the visual chat message to the message list
   function addChatMessage (data, options) {
+    /*
     // Don't fade the message in if there is an 'X was typing'
     var $typingMessages = getTypingMessages(data);
     options = options || {};
@@ -83,7 +108,7 @@ $(function() {
       options.fade = false;
       $typingMessages.remove();
     }
-
+*/
     var $usernameDiv = $('<span class="username"/>')
       .text(data.username)
       .css('color', getUsernameColor(data.username));
@@ -99,6 +124,34 @@ $(function() {
     addMessageElement($messageDiv, options);
   }
 
+  // Adds the visual Score message to the message list
+  function addScoreMessage (data, options) {
+
+    /*
+    // Don't fade the message in if there is an 'X was typing'
+    var $typingMessages = getTypingMessages(data);
+    options = options || {};
+    if ($typingMessages.length !== 0) {
+      options.fade = false;
+      $typingMessages.remove();
+    }
+*/
+    var $usernameDiv = $('<span class="username"/>')
+      .text(data.username)
+      .css('color', getUsernameColor(data.username));
+    var $scoreMessageBodyDiv = $('<span class="scoreMessageBody">')
+      .text(data.message);
+
+    var typingClass = data.typing ? 'typing S' : '';
+    var $scoreMessageDiv = $('<li class="scoreMessage"/>')
+      .data('username', data.username)
+      .addClass(typingClass)
+      .append($usernameDiv, $scoreMessageBodyDiv);
+
+    addScoreMessageElement($scoreMessageDiv, options);
+  }
+
+/*
   // Adds the visual chat typing message
   function addChatTyping (data) {
     data.typing = true;
@@ -106,12 +159,28 @@ $(function() {
     addChatMessage(data);
   }
 
+  // Adds the visual score typing message
+  function addScoreTyping (data) {
+    data.typing = true;
+    data.message = 'is typing';
+    addScoreMessage(data);
+  }
+
+
   // Removes the visual chat typing message
   function removeChatTyping (data) {
     getTypingMessages(data).fadeOut(function () {
       $(this).remove();
     });
   }
+
+  // Removes the visual chat typing message
+  function removeScoreTyping (data) {
+    getTypingMessages(data).fadeOut(function () {
+      $(this).remove();
+    });
+  }
+*/
 
   // Adds a message element to the messages and scrolls to the bottom
   // el - The element to add as a message
@@ -144,11 +213,38 @@ $(function() {
     $messages[0].scrollTop = $messages[0].scrollHeight;
   }
 
+  function addScoreMessageElement (el, options) {
+    var $el = $(el);
+
+    // Setup default options
+    if (!options) {
+      options = {};
+    }
+    if (typeof options.fade === 'undefined') {
+      options.fade = true;
+    }
+    if (typeof options.prepend === 'undefined') {
+      options.prepend = false;
+    }
+
+    // Apply options
+    if (options.fade) {
+      $el.hide().fadeIn(FADE_TIME);
+    }
+    if (options.prepend) {
+      $scoreMessages.prepend($el);
+    } else {
+      $scoreMessages.append($el);
+    }
+    $scoreMessages[0].scrollTop = $scoreMessages[0].scrollHeight;
+  }
+
   // Prevents input from having injected markup
   function cleanInput (input) {
     return $('<div/>').text(input).text();
   }
 
+/*
   // Updates the typing event
   function updateTyping () {
     if (connected) {
@@ -168,14 +264,15 @@ $(function() {
       }, TYPING_TIMER_LENGTH);
     }
   }
-
+*/
+/*
   // Gets the 'X is typing' messages of a user
   function getTypingMessages (data) {
     return $('.typing.message').filter(function (i) {
       return $(this).data('username') === data.username;
     });
   }
-
+*/
   // Gets the color of a username through our hash function
   function getUsernameColor (username) {
     // Compute hash code
@@ -199,6 +296,7 @@ $(function() {
     if (event.which === 13) {
       if (username) {
         sendMessage();
+        sendScoreMessage();
         socket.emit('stop typing');
         typing = false;
       } else {
@@ -207,10 +305,11 @@ $(function() {
     }
   });
 
+/*
   $inputMessage.on('input', function() {
     updateTyping();
   });
-
+*/
   // Click events
 
   // Focus input when clicking anywhere on login page
@@ -223,13 +322,17 @@ $(function() {
     $inputMessage.focus();
   });
 
+  $scoreInputMessage.click(function () {
+    $scoreInputMessage.focus();
+  });
+
   // Socket events
 
   // Whenever the server emits 'login', log the login message
   socket.on('login', function (data) {
     connected = true;
     // Display the welcome message
-    var message = "Welcome to Socket.IO Chat – ";
+    var message = "Welcome to OFFAL Command Line – ";
     log(message, {
       prepend: true
     });
@@ -237,8 +340,12 @@ $(function() {
   });
 
   // Whenever the server emits 'new message', update the chat body
-  socket.on('new message', function (data) {
+  socket.on('new C message', function (data) {
     addChatMessage(data);
+  });
+
+  socket.on('new S message', function (data) {
+    addScoreMessage(data);
   });
 
   // Whenever the server emits 'user joined', log it in the chat body
@@ -254,13 +361,35 @@ $(function() {
     removeChatTyping(data);
   });
 
+/*
   // Whenever the server emits 'typing', show the typing message
   socket.on('typing', function (data) {
     addChatTyping(data);
   });
 
+  socket.on('typing S', function (data) {
+    addScoreTyping(data);
+  });
+
   // Whenever the server emits 'stop typing', kill the typing message
   socket.on('stop typing', function (data) {
+
+
     removeChatTyping(data);
   });
+  */
+
+  $(document).ready(function(){
+    $(".custom-select").each(function(){
+        $(this).wrap( "<span class='select-wrapper'></span>" );
+        $(this).after("<span class='holder'></span>");
+    });
+    $(".custom-select").change(function(){
+        var selectedOption = $(this).find(":selected").text();
+        $nextScoreMsg = selectedOption;
+        $(this).next(".holder").text(selectedOption);
+    }).trigger('change');
+})
+
+
 });

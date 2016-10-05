@@ -20,11 +20,20 @@ io.on('connection', function (socket) {
   var addedUser = false;
 
   // when the client emits 'new message', this listens and executes
-  socket.on('new message', function (data) {
+  socket.on('new C message', function (data) {
     // we tell the client to execute 'new message'
-    socket.broadcast.emit('new message', {
+    socket.broadcast.emit('new C message', {
       username: socket.username,
       message: data
+    });
+  });
+
+  // when the client emits 'new message', this listens and executes
+  socket.on('new S message', function (data) {
+    // we tell the client to execute 'new message'
+    socket.broadcast.emit('new S message', {
+      username: data.username,
+      message: data.message
     });
   });
 
@@ -45,7 +54,7 @@ io.on('connection', function (socket) {
       numUsers: numUsers
     });
   });
-
+/*
   // when the client emits 'typing', we broadcast it to others
   socket.on('typing', function () {
     socket.broadcast.emit('typing', {
@@ -59,7 +68,7 @@ io.on('connection', function (socket) {
       username: socket.username
     });
   });
-
+*/
   // when the user disconnects.. perform this
   socket.on('disconnect', function () {
     if (addedUser) {
