@@ -4,9 +4,12 @@ var app = express();
 var server = require('http').createServer(app);
 var io = require('../..')(server);
 var port = process.env.PORT || 3000;
+var password;
 
 server.listen(port, function () {
   console.log('Server listening at port %d', port);
+  password = process.argv[2];
+  //console.log(password);
 });
 
 // Routing
@@ -15,9 +18,13 @@ app.use(express.static(__dirname + '/public'));
 // Chatroom
 
 var numUsers = 0;
+var users = [];
 
 io.on('connection', function (socket) {
   var addedUser = false;
+
+  //console.log("user connected");
+  socket.emit('password option', password );
 
   // when the client emits 'new message', this listens and executes
   socket.on('new C message', function (data) {
@@ -31,28 +38,43 @@ io.on('connection', function (socket) {
   // when the client emits 'new message', this listens and executes
   socket.on('new S message', function (data) {
     // we tell the client to execute 'new message'
+/*
     socket.broadcast.emit('new S message', {
       username: data.username,
       message: data.message
     });
+    */
+    //console.log(data);
+    data = JSON.parse(data);
+    //console.log(data);
+
+    socket.broadcast.emit('new S message', JSON.stringify({
+      username: data.username,
+      message: data.message
+    }));
   });
 
   // when the client emits 'add user', this listens and executes
   socket.on('add user', function (username) {
     if (addedUser) return;
 
+    users.push(username);
+    console.log(users);
+
     // we store the username in the socket session for this client
     socket.username = username;
     ++numUsers;
     addedUser = true;
-    socket.emit('login', {
-      numUsers: numUsers
-    });
+    socket.emit('login', JSON.stringify({
+      numUsers: numUsers,
+      userList: users
+    }));
     // echo globally (all clients) that a person has connected
-    socket.broadcast.emit('user joined', {
+    socket.broadcast.emit('user joined', JSON.stringify({
       username: socket.username,
-      numUsers: numUsers
-    });
+      numUsers: numUsers,
+      userList: users
+    }));
   });
 /*
   // when the client emits 'typing', we broadcast it to others
@@ -71,6 +93,12 @@ io.on('connection', function (socket) {
 */
   // when the user disconnects.. perform this
   socket.on('disconnect', function () {
+
+    //if (users.length > numUsers ) {
+    users.splice(users.indexOf(socket.username), 1);
+    console.log(users);
+    //}
+
     if (addedUser) {
       --numUsers;
 

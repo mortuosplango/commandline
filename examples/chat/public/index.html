@@ -18,15 +18,16 @@
       <input class="scoreInputMessage" placeholder="Add instructions here..."/>
 
       <form action="action.php" method="post">
-        <select name="timepass" class="custom-select">
+        <!--<select id="dropMenu" onchange="displayAccordingly()">-->
+        <select name="timepass" id="timepass" class="custom-select">
           <option>Choose Performer</option>
           <option>ALL</option>
-          <option>AG</option>
-          <option>SK</option>
-          <option>LF</option>
-          <option>JA</option>
         </select>
       </form>
+      <div class="voteArea">
+        <ul class="voteMessages" id="voteMessages" ></ul>
+        <ul class="vote" id="vote" onclick="clickFunc()">VOTE</ul>
+      </div>
 
     </li>
 
@@ -35,10 +36,18 @@
         <h3 class="title">Nickname:</h3>
         <input class="usernameInput" type="text" maxlength="14" />
         <h3 class="passTitle">Password:</h3>
-        <input class="passwordInput" type="text" maxlength="14" />
+        <input class="passwordInput" type="password" />
       </div>
     </li>
   </ul>
+
+  <script>
+  function clickFunc() {
+      document.getElementById("vote").innerHTML = "+1";
+      document.getElementById("vote").style.color = "green";
+      document.getElementById("voteMessages").style.color = "green";
+  }
+  </script>
 
   <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>

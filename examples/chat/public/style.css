@@ -58,7 +58,7 @@ ul {
   position: absolute;
 
   text-align: center;
-  top: 50%;
+  top: 20%;
   width: 100%;
 }
 
@@ -156,6 +156,7 @@ ul {
 }
 
 .messages {
+  list-style-type: none;
   height: 100%;
   margin: 0;
   overflow-y: scroll;
@@ -296,7 +297,49 @@ font-size: 11px;
 padding: 11px 0 0 0px;
 border-top:1px solid #dedede;
 }
+
+
 */
+
+.voteArea {
+  height: 40px;
+  width: 50%;
+  left: 50%;
+  bottom: 60px;
+  position: absolute;
+  background-color: #D3D3D3;
+}
+
+.voteMessage {
+  height: 100%;
+  margin: 0;
+  overflow-y: scroll;
+  top: 35%;
+  right: 10%;
+  /*left: 0;*/
+  /*position: absolute;*/
+  padding: 5px 10px 5px 10px;
+  color: orange;
+  }
+
+.voteMessages {
+  height: 100%;
+  margin: 0;
+  overflow-y: scroll;
+  top: 35%;
+  right: 10%;  /*left: 0;*/
+  /*position: absolute;*/
+  padding: 5px 10px 5px 10px;
+  color: orange;
+}
+
+.vote {
+  top: 25%;
+  right: 10%;/*left: 90%;*/
+  /*margin: 10px;*/
+  position: absolute;
+  color: orange;
+}
 
 .select-wrapper{
     float: left;

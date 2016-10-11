@@ -15,17 +15,21 @@ $(function() {
   var $inputMessage = $('.inputMessage'); // Input message input box
   var $scoreMessages = $('.scoreMessages'); // Messages area
   var $scoreInputMessage = $('.scoreInputMessage'); // Input message input box
+  var $voteMessages = $('.voteMessages'); // Messages area
+  var $vote = $('.vote'); // Messages area
+
 
   var $loginPage = $('.login.page'); // The login page
   var $chatPage = $('.chat.page'); // The chatroom page
 
   // Prompt for setting a username
+  var passwordOpt = 'pass';
   var username;
+  var users  = [];
   var connected = false;
   var typing = false;
   var lastTypingTime;
-  /*var $currentInput = $usernameInput.focus();*/
-  var $currentInput = '';
+  var $currentInput; //$usernameInput.focus();
   var $nextScoreMsg = 'ALL';
 
   var socket = io();
@@ -44,13 +48,13 @@ $(function() {
   function setUsername () {
     username = cleanInput($usernameInput.val().trim());
     password = cleanInput($passwordInput.val().trim());
-
     // If the username is valid
-    if (username && password === 'XXXX') {
+    //if (username && password === "offallynice" ) {
+    if ( (username) && (password == passwordOpt) ) {
       $loginPage.fadeOut();
       $chatPage.show();
       $loginPage.off('click');
-      $currentInput = $inputMessage.focus();
+      //$currentInput = $inputMessage.focus();
 
       // Tell the server your username
       socket.emit('add user', username);
@@ -86,12 +90,20 @@ $(function() {
         username: $nextScoreMsg,
         message: message
       });
+      addVoteMessage({
+        username: $nextScoreMsg,
+        message: message
+      });
+      var messageInfo = {
+        username: $nextScoreMsg,
+        message: message
+      }
+
       // tell server to execute 'new message' and send along one parameter
-      //socket.emit('new S message', message);
-      socket.json.emit('new S message', {
-          username: $nextScoreMsg,
-          message: message
-        })
+      socket.emit('new S message', JSON.stringify({
+        username: $nextScoreMsg,
+        message: message
+      }));
     }
   }
 
@@ -143,15 +155,48 @@ $(function() {
       .text(data.username)
       .css('color', getUsernameColor(data.username));
     var $scoreMessageBodyDiv = $('<span class="scoreMessageBody">')
-      .text(data.message);
+      .text(data.message)
 
     var typingClass = data.typing ? 'typing S' : '';
     var $scoreMessageDiv = $('<li class="scoreMessage"/>')
       .data('username', data.username)
       .addClass(typingClass)
       .append($usernameDiv, $scoreMessageBodyDiv);
+      console.log($scoreMessageDiv);
 
     addScoreMessageElement($scoreMessageDiv, options);
+  }
+
+  function addVoteMessage (data, options) {
+
+    /*
+    // Don't fade the message in if there is an 'X was typing'
+    var $typingMessages = getTypingMessages(data);
+    options = options || {};
+    if ($typingMessages.length !== 0) {
+      options.fade = false;
+      $typingMessages.remove();
+    }
+*/
+    var $usernameDiv = $('<span class="username"/>')
+      .text(data.username)
+      .css('color', getUsernameColor(data.username));
+    var $voteMessageBodyDiv = $('<span class="voteMessage" id="voteMessages"/>')
+      .text(data.message)
+      //.append(" VOTE");
+
+    var typingClass = data.typing ? 'typing S' : '';
+    var $voteMessageDiv = $('<p class="voteMessages id="voteMessages"/>')
+      .data('username', data.username)
+      .addClass(typingClass)
+      .append($usernameDiv, $voteMessageBodyDiv);
+
+    $vote.text("VOTE");
+    $vote.css('color', "orange");
+
+      console.log($voteMessageDiv);
+
+    addVoteMessageElement($voteMessageDiv, options);
   }
 
 /*
@@ -239,7 +284,41 @@ $(function() {
     } else {
       $scoreMessages.append($el);
     }
+
+    console.log($scoreMessages);
+
     $scoreMessages[0].scrollTop = $scoreMessages[0].scrollHeight;
+  }
+
+  function addVoteMessageElement (el, options) {
+    var $el = $(el);
+
+    if (!options) {
+      options = {};
+    }
+    if (typeof options.fade === 'undefined') {
+      options.fade = true;
+    }
+    if (typeof options.prepend === 'undefined') {
+      options.prepend = false;
+    }
+
+    // Apply options
+    if (options.fade) {
+      $el.hide().fadeIn(FADE_TIME);
+    }
+    if (options.prepend) {
+      $voteMessages.empty();
+      $voteMessages.append($el);
+    } else {
+      $voteMessages.empty();
+      $voteMessages.append($el);
+    }
+
+    console.log($voteMessages);
+    //$voteMessages[0].scrollTop = $voteMessages[0].scrollHeight;
+
+
   }
 
   // Prevents input from having injected markup
@@ -293,7 +372,7 @@ $(function() {
   $window.keydown(function (event) {
     // Auto-focus the current input when a key is typed
     if (!(event.ctrlKey || event.metaKey || event.altKey)) {
-      $currentInput.focus();
+      //$currentInput.focus();
     }
     // When the client hits ENTER on their keyboard
     if (event.which === 13) {
@@ -317,7 +396,7 @@ $(function() {
 
   // Focus input when clicking anywhere on login page
   $loginPage.click(function () {
-    $currentInput.focus();
+    //$currentInput.focus();
   });
 
   // Focus input when clicking on the message input's border
@@ -333,13 +412,56 @@ $(function() {
 
   // Whenever the server emits 'login', log the login message
   socket.on('login', function (data) {
+
     connected = true;
+
     // Display the welcome message
     var message = "Welcome to OFFAL Command Line – ";
     log(message, {
       prepend: true
     });
-    addParticipantsMessage(data);
+
+    data = JSON.parse(data);
+    log(data.userList);
+
+    addToDrop(data.userList);
+    addParticipantsMessage(data.numUsers);
+  });
+
+  function addToDrop(data) {
+
+    //data = JSON.parse(data);
+    console.log(data);
+
+    var menu = $('#timepass');
+
+      menu.empty();
+      $("<option />")
+      .attr("value", "Choose Performer")
+      .html("Choose Performer")
+      .appendTo(menu);
+      $("<option />")
+      .attr("value", "ALL")
+      .html("ALL")
+      .appendTo(menu);
+
+      //$.each(data.userList[value], function(){
+      $.each(data, function(index, value){
+          console.log(value)
+          $("<option />")
+          .attr("value", value)
+          .html(value)
+          .appendTo(menu);
+      });
+    //}).change();
+
+  }
+
+
+  socket.on('password option', function (data) {
+    console.log("password received");
+    passwordOpt = data;
+    //console.log(passwordOpt);
   });
 
   // Whenever the server emits 'new message', update the chat body
@@ -348,12 +470,17 @@ $(function() {
   });
 
   socket.on('new S message', function (data) {
+    data = JSON.parse(data);
     addScoreMessage(data);
   });
 
   // Whenever the server emits 'user joined', log it in the chat body
   socket.on('user joined', function (data) {
+
+    data = JSON.parse(data);
+
     log(data.username + ' joined');
+    addToDrop(data.userList);
     addParticipantsMessage(data);
   });
 
@@ -361,7 +488,7 @@ $(function() {
   socket.on('user left', function (data) {
     log(data.username + ' left');
     addParticipantsMessage(data);
-    removeChatTyping(data);
+    //removeChatTyping(data);
   });
 
 /*
@@ -394,5 +521,23 @@ $(function() {
     }).trigger('change');
 })
 
+/*
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<p id="demo" onclick="myFunction()">Click me to change my text color.</p>
+
+<script>
+function myFunction() {
+    document.getElementById("demo").style.color = "red";
+}
+</script>
+
+</body>
+</html>
+
+*/
 
 });
