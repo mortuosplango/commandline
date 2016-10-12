@@ -341,6 +341,14 @@ border-top:1px solid #dedede;
   color: orange;
 }
 
+.numVote {
+  top: 25%;
+  right: 20%;/*left: 90%;*/
+  /*margin: 10px;*/
+  position: absolute;
+  color: orange;
+}
+
 .select-wrapper{
     float: left;
     display: inline-block;

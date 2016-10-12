@@ -16,7 +16,9 @@ $(function() {
   var $scoreMessages = $('.scoreMessages'); // Messages area
   var $scoreInputMessage = $('.scoreInputMessage'); // Input message input box
   var $voteMessages = $('.voteMessages'); // Messages area
+  var $voteMessage = $('.voteMessage'); // Messages area
   var $vote = $('.vote'); // Messages area
+  var $numVote = $('.numVote'); // Messages area
 
 
   var $loginPage = $('.login.page'); // The login page
@@ -31,8 +33,11 @@ $(function() {
   var lastTypingTime;
   var $currentInput; //$usernameInput.focus();
   var $nextScoreMsg = 'ALL';
-
+  var numVotes = 0;
+  var voteFlag = true;
+  var msgFlag = false;
   var socket = io();
+  var $message = "";
 
   function addParticipantsMessage (data) {
     var message = '';
@@ -49,7 +54,6 @@ $(function() {
     username = cleanInput($usernameInput.val().trim());
     password = cleanInput($passwordInput.val().trim());
     // If the username is valid
-    //if (username && password === "offallynice" ) {
     if ( (username) && (password == passwordOpt) ) {
       $loginPage.fadeOut();
       $chatPage.show();
@@ -80,29 +84,35 @@ $(function() {
 
   // Sends a SCORE message
   function sendScoreMessage () {
-    var message = $scoreInputMessage.val();
+    $message = $scoreInputMessage.val();
     // Prevent markup from being injected into the message
-    message = cleanInput(message);
+    $message = cleanInput($message);
     // if there is a non-empty message and a socket connection
-    if (message && connected) {
+    if ($message && connected) {
       $scoreInputMessage.val('');
+      /*
       addScoreMessage({
         username: $nextScoreMsg,
         message: message
       });
+      */
       addVoteMessage({
         username: $nextScoreMsg,
-        message: message
+        message: $message
       });
       var messageInfo = {
         username: $nextScoreMsg,
-        message: message
+        message: $message
       }
+
+      msgFlag = true;
+      voteFlag = true;
+      numVotes = 0;
 
       // tell server to execute 'new message' and send along one parameter
       socket.emit('new S message', JSON.stringify({
         username: $nextScoreMsg,
-        message: message
+        message: $message
       }));
     }
   }
@@ -193,6 +203,8 @@ $(function() {
 
     $vote.text("VOTE");
     $vote.css('color', "orange");
+    $numVote.text("+0");
+    $numVote.css('color', "orange");
 
       console.log($voteMessageDiv);
 
@@ -519,7 +531,68 @@ $(function() {
         $nextScoreMsg = selectedOption;
         $(this).next(".holder").text(selectedOption);
     }).trigger('change');
-})
+  })
+
+
+  $(document).ready(function(){
+
+    /*
+    $(".vote").each(function(){
+        $(this).wrap( "<span class='select-wrapper'></span>" );
+        $(this).after("<span class='holder'></span>");
+    });
+
+    */
+    $(".vote").click(function(){
+
+        if ( voteFlag && msgFlag ) {
+        numVotes++
+        console.log(numVotes);
+
+        $(this).text("-");
+        $(this).css('color', "green");
+
+        $numVote.text("+"+numVotes);
+        $numVote.css('color', "green");
+
+        $voteMessages.css('color', "green");
+        $voteMessage.css('color', "green");
+
+        if ( numVotes > 0 /*((numUsers * 0.5)-1)*/ ) {
+
+          console.log("voted up");
+          addScoreMessage({
+            username: $nextScoreMsg,
+            message: $message
+          });
+          addVoteMessage({
+            username: "",
+            message: ""
+          });
+
+        };
+
+        $(this).text("-");
+        $numVote.text("");
+
+        voteFlag = false;
+        msgFlag = false;
+      }
+
+/*
+        var selectedOption = $(this).find(":selected").text();
+        $nextScoreMsg = selectedOption;
+        $(this).next(".holder").text(selectedOption);
+
+        document.getElementById("vote").innerHTML = "-";
+        document.getElementById("vote").style.color = "green";
+        document.getElementById("numVote").innerHTML = "+1";
+        document.getElementById("numVote").style.color = "green";
+        document.getElementById("voteMessages").style.color = "green";
+*/
+
+    }).trigger('change');
+  })
 
 /*
 

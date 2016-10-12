@@ -26,7 +26,8 @@
       </form>
       <div class="voteArea">
         <ul class="voteMessages" id="voteMessages" ></ul>
-        <ul class="vote" id="vote" onclick="clickFunc()">VOTE</ul>
+        <ul class="vote" id="vote">-</ul>
+        <ul class="numVote" id="numVote"></ul>
       </div>
 
     </li>
@@ -43,9 +44,12 @@
 
   <script>
   function clickFunc() {
-      document.getElementById("vote").innerHTML = "+1";
-      document.getElementById("vote").style.color = "green";
+      //document.getElementById("vote").innerHTML = "-";
+      //document.getElementById("vote").style.color = "green";
+      //document.getElementById("numVote").innerHTML = "+1";
+      //document.getElementById("numVote").style.color = "green";
       document.getElementById("voteMessages").style.color = "green";
+
   }
   </script>
 
