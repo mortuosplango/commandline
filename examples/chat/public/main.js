@@ -28,6 +28,7 @@ $(function() {
   var passwordOpt = 'pass';
   var username;
   var users  = [];
+  var $numUsers = 0;
   var connected = false;
   var typing = false;
   var lastTypingTime;
@@ -108,12 +109,15 @@ $(function() {
       msgFlag = true;
       voteFlag = true;
       numVotes = 0;
+      //socket.emit('reset vote', { numVotes: numVotes, message: $message } );
 
       // tell server to execute 'new message' and send along one parameter
+
       socket.emit('new S message', JSON.stringify({
         username: $nextScoreMsg,
         message: $message
       }));
+
     }
   }
 
@@ -125,15 +129,7 @@ $(function() {
 
   // Adds the visual chat message to the message list
   function addChatMessage (data, options) {
-    /*
-    // Don't fade the message in if there is an 'X was typing'
-    var $typingMessages = getTypingMessages(data);
-    options = options || {};
-    if ($typingMessages.length !== 0) {
-      options.fade = false;
-      $typingMessages.remove();
-    }
-*/
+
     var $usernameDiv = $('<span class="username"/>')
       .text(data.username)
       .css('color', getUsernameColor(data.username));
@@ -152,15 +148,6 @@ $(function() {
   // Adds the visual Score message to the message list
   function addScoreMessage (data, options) {
 
-    /*
-    // Don't fade the message in if there is an 'X was typing'
-    var $typingMessages = getTypingMessages(data);
-    options = options || {};
-    if ($typingMessages.length !== 0) {
-      options.fade = false;
-      $typingMessages.remove();
-    }
-*/
     var $usernameDiv = $('<span class="username"/>')
       .text(data.username)
       .css('color', getUsernameColor(data.username));
@@ -172,7 +159,7 @@ $(function() {
       .data('username', data.username)
       .addClass(typingClass)
       .append($usernameDiv, $scoreMessageBodyDiv);
-      console.log($scoreMessageDiv);
+      //console.log($scoreMessageDiv);
 
     addScoreMessageElement($scoreMessageDiv, options);
   }
@@ -206,7 +193,7 @@ $(function() {
     $numVote.text("+0");
     $numVote.css('color', "orange");
 
-      console.log($voteMessageDiv);
+      //console.log($voteMessageDiv);
 
     addVoteMessageElement($voteMessageDiv, options);
   }
@@ -297,7 +284,7 @@ $(function() {
       $scoreMessages.append($el);
     }
 
-    console.log($scoreMessages);
+    //console.log($scoreMessages);
 
     $scoreMessages[0].scrollTop = $scoreMessages[0].scrollHeight;
   }
@@ -327,7 +314,7 @@ $(function() {
       $voteMessages.append($el);
     }
 
-    console.log($voteMessages);
+    //console.log($voteMessages);
     //$voteMessages[0].scrollTop = $voteMessages[0].scrollHeight;
 
 
@@ -434,7 +421,8 @@ $(function() {
     });
 
     data = JSON.parse(data);
-    log(data.userList);
+    $numUsers = data.numUsers;
+    console.log($numUsers);
 
     addToDrop(data.userList);
     addParticipantsMessage(data.numUsers);
@@ -476,20 +464,62 @@ $(function() {
     //console.log(passwordOpt);
   });
 
+  socket.on('voted', function (votes) {
+    ++numVotes;
+    console.log("numvotes: "+numVotes);
+    //numVotes = votes.votes;
+    $numVote.text("+"+numVotes);
+    //$message = votes.message;
+  });
+
+
+  socket.on('reset vote', function (votes) {
+    //numVotes = votes.votes;
+    //msgFlag = true;
+    voteFlag = true;
+    numVotes = 0;
+
+    console.log("message: "+votes.message);
+
+
+    addScoreMessage({
+      username: $nextScoreMsg,
+      message: $message //votes.message
+    });
+    addVoteMessage({
+      username: "",
+      message: ""
+    });
+
+    $vote.text("-");
+    $vote.css('color', "orange");
+    $numVote.text("");
+    $numVote.css('color', "orange");
+
+  });
+
   // Whenever the server emits 'new message', update the chat body
   socket.on('new C message', function (data) {
     addChatMessage(data);
   });
 
   socket.on('new S message', function (data) {
+    msgFlag = true;
+
     data = JSON.parse(data);
-    addScoreMessage(data);
+    //addScoreMessage(data);
+    $message = data.message;
+
+    addVoteMessage(data);
   });
 
   // Whenever the server emits 'user joined', log it in the chat body
   socket.on('user joined', function (data) {
 
     data = JSON.parse(data);
+
+    $numUsers = data.numUsers;
+    console.log(data.numUsers);
 
     log(data.username + ' joined');
     addToDrop(data.userList);
@@ -498,6 +528,8 @@ $(function() {
 
   // Whenever the server emits 'user left', log it in the chat body
   socket.on('user left', function (data) {
+    $numUsers = data.numUsers;
+    console.log(data.numUsers);
     log(data.username + ' left');
     addParticipantsMessage(data);
     //removeChatTyping(data);
@@ -545,9 +577,16 @@ $(function() {
     */
     $(".vote").click(function(){
 
+        var voteTrig = Math.floor($numUsers * 0.5);
+        console.log(voteTrig);
+
         if ( voteFlag && msgFlag ) {
-        numVotes++
-        console.log(numVotes);
+        //numVotes++
+        socket.emit('voted', { votes: numVotes /*, message: $message*/ });
+
+        ++numVotes;
+
+        console.log("num votes: "+numVotes);
 
         $(this).text("-");
         $(this).css('color', "green");
@@ -558,9 +597,14 @@ $(function() {
         $voteMessages.css('color', "green");
         $voteMessage.css('color', "green");
 
-        if ( numVotes > 0 /*((numUsers * 0.5)-1)*/ ) {
+        if ( numVotes >= voteTrig ) {
+
+          socket.emit('reset vote', { numVotes: numVotes /*, message: $message*/ } );
+          // make sure the correct message text is sent at the right time. setting the messaage to nil in all but the user who sent the message originally.
 
           console.log("voted up");
+          console.log($message);
+
           addScoreMessage({
             username: $nextScoreMsg,
             message: $message
@@ -569,14 +613,18 @@ $(function() {
             username: "",
             message: ""
           });
+          $(this).text("-");
+          $numVote.text("");
+
+          msgFlag = true;
+          voteFlag = true;
+          numVotes = 0;
 
         };
 
-        $(this).text("-");
-        $numVote.text("");
-
         voteFlag = false;
         msgFlag = false;
+
       }
 
 /*

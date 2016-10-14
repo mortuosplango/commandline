@@ -19,12 +19,29 @@ app.use(express.static(__dirname + '/public'));
 
 var numUsers = 0;
 var users = [];
+var numVotes = 0;
 
 io.on('connection', function (socket) {
   var addedUser = false;
 
   //console.log("user connected");
   socket.emit('password option', password );
+
+  socket.on('reset vote', function (votes) {
+
+    numVotes = 0;
+    console.log("message: "+votes.message);
+    socket.broadcast.emit('reset vote', { votes: numVotes, message: votes.message } );
+
+    });
+
+  socket.on('voted', function (votes) {
+
+    ++numVotes;
+    console.log("numvotes: "+numVotes);
+    socket.broadcast.emit('voted', { votes: votes.numVotes /*, message: votes.message*/ } );
+
+  });
 
   // when the client emits 'new message', this listens and executes
   socket.on('new C message', function (data) {
@@ -46,7 +63,8 @@ io.on('connection', function (socket) {
     */
     //console.log(data);
     data = JSON.parse(data);
-    //console.log(data);
+    console.log(data);
+
 
     socket.broadcast.emit('new S message', JSON.stringify({
       username: data.username,
