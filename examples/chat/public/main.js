@@ -509,6 +509,7 @@ $(function() {
     data = JSON.parse(data);
     //addScoreMessage(data);
     $message = data.message;
+    $nextScoreMsg = data.username;
 
     addVoteMessage(data);
   });
