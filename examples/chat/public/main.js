@@ -616,14 +616,15 @@ $(function() {
           $(this).text("-");
           $numVote.text("");
 
-          msgFlag = true;
-          voteFlag = true;
-          numVotes = 0;
+          msgFlag = false;
+
+          //msgFlag = true;
+          //voteFlag = true;
+          //numVotes = 0;
 
         };
 
         voteFlag = false;
-        msgFlag = false;
 
       }
 
