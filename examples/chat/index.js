@@ -30,8 +30,9 @@ io.on('connection', function (socket) {
   socket.on('reset vote', function (votes) {
 
     numVotes = 0;
-    console.log("message: "+votes.message);
-    socket.broadcast.emit('reset vote', { votes: numVotes, message: votes.message } );
+    console.log("reset vote num : "+numVotes);
+    socket.broadcast.emit('reset vote', { votes: numVotes,
+                                          message: votes.message } );
 
     });
 
@@ -39,7 +40,8 @@ io.on('connection', function (socket) {
 
     ++numVotes;
     console.log("numvotes: "+numVotes);
-    socket.broadcast.emit('voted', { votes: votes.numVotes /*, message: votes.message*/ } );
+    socket.broadcast.emit('voted', { votes: numVotes,
+                                      message: votes.message } );
 
   });
 
@@ -113,13 +115,18 @@ io.on('connection', function (socket) {
   socket.on('disconnect', function () {
 
     //if (users.length > numUsers ) {
-    users.splice(users.indexOf(socket.username), 1);
-    console.log(users);
+    
     //}
 
     if (addedUser) {
       --numUsers;
 
+      userIndex = users.indexOf(socket.username);
+      if(userIndex != -1) {
+        users.splice(userIndex, 1);
+        console.log("disconnect");
+        console.log(users);
+      };
       // echo globally that this client has left
       socket.broadcast.emit('user left', {
         username: socket.username,

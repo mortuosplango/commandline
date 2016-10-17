@@ -85,11 +85,12 @@ $(function() {
 
   // Sends a SCORE message
   function sendScoreMessage () {
-    $message = $scoreInputMessage.val();
+    var tmpmessage = $scoreInputMessage.val();
     // Prevent markup from being injected into the message
-    $message = cleanInput($message);
+    tmpmessage = cleanInput(tmpmessage);
     // if there is a non-empty message and a socket connection
-    if ($message && connected) {
+    if (tmpmessage && connected) {
+      $message = tmpmessage;
       $scoreInputMessage.val('');
       /*
       addScoreMessage({
@@ -104,7 +105,7 @@ $(function() {
       var messageInfo = {
         username: $nextScoreMsg,
         message: $message
-      }
+      };
 
       msgFlag = true;
       voteFlag = true;
@@ -152,7 +153,7 @@ $(function() {
       .text(data.username)
       .css('color', getUsernameColor(data.username));
     var $scoreMessageBodyDiv = $('<span class="scoreMessageBody">')
-      .text(data.message)
+        .text(data.message);
 
     var typingClass = data.typing ? 'typing S' : '';
     var $scoreMessageDiv = $('<li class="scoreMessage"/>')
@@ -179,7 +180,7 @@ $(function() {
       .text(data.username)
       .css('color', getUsernameColor(data.username));
     var $voteMessageBodyDiv = $('<span class="voteMessage" id="voteMessages"/>')
-      .text(data.message)
+        .text(data.message);
       //.append(" VOTE");
 
     var typingClass = data.typing ? 'typing S' : '';
@@ -447,7 +448,7 @@ $(function() {
 
       //$.each(data.userList[value], function(){
       $.each(data, function(index, value){
-          console.log(value)
+        console.log(value);
           $("<option />")
           .attr("value", value)
           .html(value)
@@ -465,11 +466,13 @@ $(function() {
   });
 
   socket.on('voted', function (votes) {
-    ++numVotes;
-    console.log("numvotes: "+numVotes);
-    //numVotes = votes.votes;
-    $numVote.text("+"+numVotes);
-    //$message = votes.message;
+    if(votes.message != username) {
+      numVotes = votes.votes;
+      console.log("numvotes: "+numVotes);
+      //numVotes = votes.votes;
+      $numVote.text("+"+numVotes);
+      //$message = votes.message;
+    };
   });
 
 
@@ -479,7 +482,7 @@ $(function() {
     voteFlag = true;
     numVotes = 0;
 
-    console.log("message: "+votes.message);
+    console.log("message: "+$message + "vote msg:" + votes.message);
 
 
     addScoreMessage({
@@ -564,7 +567,7 @@ $(function() {
         $nextScoreMsg = selectedOption;
         $(this).next(".holder").text(selectedOption);
     }).trigger('change');
-  })
+  });
 
 
   $(document).ready(function(){
@@ -581,8 +584,8 @@ $(function() {
         var voteTrig = Math.floor($numUsers * 0.5);
         console.log(voteTrig);
 
-        if ( voteFlag && msgFlag ) {
-        //numVotes++
+      if ( voteFlag && msgFlag ) {
+        //numVotes++;
         socket.emit('voted', { votes: numVotes /*, message: $message*/ });
 
         ++numVotes;
@@ -620,7 +623,7 @@ $(function() {
           msgFlag = false;
 
           //msgFlag = true;
-          //voteFlag = true;
+          voteFlag = true;
           //numVotes = 0;
 
         };
@@ -642,7 +645,7 @@ $(function() {
 */
 
     }).trigger('change');
-  })
+  });
 
 /*
 
